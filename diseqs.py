@@ -1,5 +1,4 @@
 # Libreries
-import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import sys
@@ -15,11 +14,13 @@ bases = {"A": "T", "T": "A", "C": "G", "G": "C"}
 def main(file):
     """Type the name of your data file"""
     data = open_file(file)
-    return convert(data)
+    procesed = convert(data)
+    skw = procesed.GC_content(an="%", rd=3)
+    return skw
 
 
 # Open file function (fasta)
-def open_file(file=""):
+def open_file(file):
     # Open fasta files
     if file.endswith((".fasta", ".fna")):
         data = {}
@@ -41,78 +42,75 @@ def open_file(file=""):
         data = pd.read_csv(file, engine="python")
     elif file.endswith(".tsv"):
         data = pd.read_csv(file, sep=r"\t", engine="python")
+    else:
+        raise ValueError("Unsuported file type")
     return data
 
 
 # Writes the output of your analysis
-def make_graph(skews):
+def make_graph(skews, image = 'new_image.png'):
     fig = plt.figure(figsize=(13,5))
     ax = fig.add_axes([0, 0, 1, 1])
     ax.axhline(0, color='black', linewidth=1.2, linestyle='-')
     ax.axvline(0, color='black', linewidth=1.2, linestyle='-')
     ax.plot(range(len(skews)), skews, color = 'olive', lw = 1)
-    return plt.savefig("diseqs_image.png")
+    return plt.savefig(image)
 
 
 # This returns a dict filtered by length, a dataframe filtered and sorted by the arguments given
-def filt(data="", leng="", dataframe="", dropdup="", quality=""):
+def filt(data="", leng="", quality="", id= '', column=""):
     try:
-        if not data:
-            raise ValueError("Not data given")
-        if dataframe != "" or not isinstance(dataframe, str):
-            raise ValueError("Invalid dataframe")
-        if leng != "" or not isinstance(leng, int):
-            ValueError("Leng must be int only")
-        for i in [dropdup, quality]:
-            if i != "" or not isinstance(i, bool):
-                raise ValueError(f"{i} must be bool")
+        if leng != "" and not isinstance(leng, int):
+            raise ValueError("Leng must be int only")
+        if quality != "" and not isinstance(quality, bool):
+            raise ValueError(f"Quality must be bool")
+        if column != "" and not isinstance(column, str):
+            raise ValueError(f"Column must be str")
+        if id != "" and not isinstance(id, str):
+            raise ValueError(f"ID must be str")
     except ValueError:
         sys.exit(1)
     # Returns the dict of the data given filtered by the length given
     if leng:
         LENG = {}
-        for i in data.keys():
-            if len(data[i]) >= leng:
-                LENG.updat({i: data[i]})
-    if dataframe:
-        if quality:
-            filtered = []
-            not_filtered = []
-            for qacc, identity, coberture, evalue, bitscore, qlen in dataframe[
-                ["qacc", "pident", "length", "evalue", "bitscore", "qlen"]
-            ].values:
-                cobertura = (coberture / qlen) * 100
-                res = ((identity >= 90) or (cobertura >= 75)) and (
-                    (evalue <= 1e-5) or (bitscore >= 50)
-                )
-                if res == True:
-                    filtered.append(qacc)
-                else:
-                    not_filtered.append(qacc)
-            DF_FALSE = dataframe[dataframe["qacc"].isin(not_filtered)]
-            DF_TRUE = dataframe[dataframe["qacc"].isin(filtered)]
-    return [LENG, DF_FALSE, DF_TRUE]
+        for i, s in data[[id, column]].values:
+            if len(s) >= leng: LENG.update({i: s})
+        return LENG
+    if quality:
+        filtered = []
+        not_filtered = []
+        for qacc, identity, coberture, evalue, bitscore, qlen in data[
+            ["qacc", "pident", "length", "evalue", "bitscore", "qlen"]
+        ].values:
+            cobertura = (coberture / qlen) * 100
+            res = ((identity >= 90) or (cobertura >= 75)) and (
+                (evalue <= 1e-5) or (bitscore >= 50)
+            )
+            if res == True:
+                filtered.append(qacc)
+            else:
+                not_filtered.append(qacc)
+        DF_FALSE = data[data["qacc"].isin(not_filtered)]
+        DF_TRUE = data[data["qacc"].isin(filtered)]
+        return [DF_FALSE, DF_TRUE]
 
 
 # Makes a orginal dataframe with the data given, can merge only 2 dataframes
-def df_maker(data="", dataframes="", merge="", column="", how=""):
+def df_maker(data="", merge="", column="", how=""):
     try:
-        if not data:
-            raise ValueError("Data not given")
         for i in [column, how]:
-            if i != "" or not isinstance(i, str):
+            if i != "" and not isinstance(i, str):
                 raise ValueError("Invalid columnns to merge")
-        if dataframes != "" or not isinstance(dataframes, list):
-            raise ValueError("Need to give dataframes to work on")
-        if merge != "" or not isinstance(merge, bool):
+        if merge != "" and not isinstance(merge, bool):
             raise ValueError("Merge must be True or False")
     except ValueError:
         sys.exit(1)
-    # Make a dataframe of the data given
-    DF_OG = pd.DataFrame(data)
     if merge:
-        MERGE = dataframes[0].merge(dataframes[1], on=column, how=how)
-    return [DF_OG, MERGE]
+        MERGE = data[0].merge(data[1], on=column, how=how)
+        return MERGE
+    else:
+        DF_OG = pd.DataFrame(data)
+        return DF_OG
 
 
 # Turns de data into a Genome class
@@ -212,11 +210,11 @@ class Genome:
         if an == "%":
             for i in gc.keys():
                 if rd == "":
-                    final = gc.update(
+                    gc.update(
                         {i: round(((gc[i][0] + gc[i][1]) / self.length[i]) * 100, 2)}
                     )
                 else:
-                    final = gc.update(
+                    gc.update(
                         {i: round(((gc[i][0] + gc[i][1]) / self.length[i]) * 100, rd)}
                     )
             final = gc
@@ -277,9 +275,11 @@ class Genome:
                         mtchs.update({i: (j, items[j])})
         elif type(items) == list:
             for i in self.data.keys():
+                mat = []
                 for j in items:
                     if j in self.data[i]:
-                        mtchs.update({i: j})
+                        mat.append(j)
+                mtchs.update({i: mat})
         return mtchs
 
 
