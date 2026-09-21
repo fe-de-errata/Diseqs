@@ -4,67 +4,75 @@ import pandas
 
 
 def test_main():
-    #Correct
-    assert main("sequence.fasta") == {'GS874858.1': 37.537}
+    # Correct
+    assert main("sequence.fasta") == {"GS874858.1": 37.537}
 
-    #Wrong file name
+    # Wrong file name
     with pytest.raises(FileNotFoundError):
         main("secuence.fasta")
 
-    #Correct class name
+    # Correct class name
     assert type(main("sequence.fasta")) == dict
 
 
 def test_open_file():
-    #Correct fasta open
-    assert open_file("sequence.fasta") == {'GS874858.1': 'TAGTGTAACTGGGTTGACGTTCCATGTAGCAAATACGTCTCTAGCTTTAATTACCTTATTGTAATCATTGACAGTTCCTTTTGGAAGATTTATAGTTACTCTTCCAGAAGAGGTATTAATAGCGTATGATTTTCCCCATTCGGCTTTTAGTGTTTGACCAGATGAAGCATCATAAGTTTTCCAGGCACCGGCTGAATATGGAACATCTCCATCACCAAGCTCGTAATAAAGCTCATCAAAGTTTTCATTTATTTTTATACCACCTTTACGCAGGTAGTCACCGGTACCATCATCAACAACATTACCGATATTAATATTTTGTTTCATTATTGAGCCACCCC'}
+    # Correct fasta open
+    assert open_file("sequence.fasta") == {
+        "GS874858.1": "TAGTGTAACTGGGTTGACGTTCCATGTAGCAAATACGTCTCTAGCTTTAATTACCTTATTGTAATCATTGACAGTTCCTTTTGGAAGATTTATAGTTACTCTTCCAGAAGAGGTATTAATAGCGTATGATTTTCCCCATTCGGCTTTTAGTGTTTGACCAGATGAAGCATCATAAGTTTTCCAGGCACCGGCTGAATATGGAACATCTCCATCACCAAGCTCGTAATAAAGCTCATCAAAGTTTTCATTTATTTTTATACCACCTTTACGCAGGTAGTCACCGGTACCATCATCAACAACATTACCGATATTAATATTTTGTTTCATTATTGAGCCACCCC"
+    }
 
-    #Wrong fasta file written
+    # Wrong fasta file written
     with pytest.raises(SystemExit):
         open_file("wrong_written.fasta")
 
-    #Correct csv open
+    # Correct csv open
     assert type(open_file("sequence.csv")) == pandas.DataFrame
 
-    #Correct tsv open
+    # Correct tsv open
     assert type(open_file("genome.tsv")) == pandas.DataFrame
 
 
 def test_filt():
-    #Correct leng filter
+    # Correct leng filter
     seq = open_file("sequence.csv")
-    assert filt(data = seq, leng=3, id="qacc", column="sacc") == {'Query_5958997': 'PP987310.1'}
+    assert filt(data=seq, leng=3, id="qacc", column="sacc") == {
+        "Query_5958997": "PP987310.1"
+    }
 
-    #Correct quality filter
-    assert type(filt(data = seq, quality=True)[1]) == pandas.DataFrame
+    # Correct quality filter
+    assert type(filt(data=seq, quality=True)[1]) == pandas.DataFrame
 
-    #Correct quality filter
-    assert type(filt(data = seq, quality=True)[0]) == pandas.DataFrame
+    # Correct quality filter
+    assert type(filt(data=seq, quality=True)[0]) == pandas.DataFrame
 
-    #Correct filter working
+    # Correct filter working
     with pytest.raises(SystemExit):
-        filt(data = seq, leng="hola")
+        filt(data=seq, leng="hola")
 
     with pytest.raises(SystemExit):
-        filt(data = seq, quality="hola")
+        filt(data=seq, quality="hola")
 
     with pytest.raises(SystemExit):
-        filt(data = seq, leng=3, id=3, column="sacc")
+        filt(data=seq, leng=3, id=3, column="sacc")
 
 
 def test_convert():
     seq = open_file("sequence.fasta")
-    #converts makes genome class
+    # converts makes genome class
     assert type(convert(seq)) == Genome
 
-    #Count nb
-    assert convert(seq).nb_count == {'GS874858.1': [{'A': 95}, {'T': 118}, {'C': 73}, {'G': 55}]}
+    # Count nb
+    assert convert(seq).nb_count == {
+        "GS874858.1": [{"A": 95}, {"T": 118}, {"C": 73}, {"G": 55}]
+    }
 
-    #Length
-    assert convert(seq).length == {'GS874858.1': 341}
+    # Length
+    assert convert(seq).length == {"GS874858.1": 341}
 
-    #Correct GC count with 3 decimals
-    assert convert(seq).GC_content(an="%", rd=3) == {'GS874858.1': 37.537}
+    # Correct GC count with 3 decimals
+    assert convert(seq).GC_content(an="%", rd=3) == {"GS874858.1": 37.537}
 
-    #Correct RNA reverse convert
-    assert convert(seq).RNA(reverse=True) == {'GS874858.1': 'UAGUGUAACUGGGUUGACGUUCCAUGUAGCAAAUACGUCUCUAGCUUUAAUUACCUUAUUGUAAUCAUUGACAGUUCCUUUUGGAAGAUUUAUAGUUACUCUUCCAGAAGAGGUAUUAAUAGCGUAUGAUUUUCCCCAUUCGGCUUUUAGUGUUUGACCAGAUGAAGCAUCAUAAGUUUUCCAGGCACCGGCUGAAUAUGGAACAUCUCCAUCACCAAGCUCGUAAUAAAGCUCAUCAAAGUUUUCAUUUAUUUUUAUACCACCUUUACGCAGGUAGUCACCGGUACCAUCAUCAACAACAUUACCGAUAUUAAUAUUUUGUUUCAUUAUUGAGCCACCCC'}
+    # Correct RNA reverse convert
+    assert convert(seq).RNA(reverse=True) == {
+        "GS874858.1": "UAGUGUAACUGGGUUGACGUUCCAUGUAGCAAAUACGUCUCUAGCUUUAAUUACCUUAUUGUAAUCAUUGACAGUUCCUUUUGGAAGAUUUAUAGUUACUCUUCCAGAAGAGGUAUUAAUAGCGUAUGAUUUUCCCCAUUCGGCUUUUAGUGUUUGACCAGAUGAAGCAUCAUAAGUUUUCCAGGCACCGGCUGAAUAUGGAACAUCUCCAUCACCAAGCUCGUAAUAAAGCUCAUCAAAGUUUUCAUUUAUUUUUAUACCACCUUUACGCAGGUAGUCACCGGUACCAUCAUCAACAACAUUACCGAUAUUAAUAUUUUGUUUCAUUAUUGAGCCACCCC"
+    }

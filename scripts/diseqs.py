@@ -48,17 +48,17 @@ def open_file(file):
 
 
 # Writes the output of your analysis
-def make_graph(skews, image = 'new_image.png'):
-    fig = plt.figure(figsize=(13,5))
+def make_graph(skews, image="new_image.png"):
+    fig = plt.figure(figsize=(13, 5))
     ax = fig.add_axes([0, 0, 1, 1])
-    ax.axhline(0, color='black', linewidth=1.2, linestyle='-')
-    ax.axvline(0, color='black', linewidth=1.2, linestyle='-')
-    ax.plot(range(len(skews)), skews, color = 'olive', lw = 1)
+    ax.axhline(0, color="black", linewidth=1.2, linestyle="-")
+    ax.axvline(0, color="black", linewidth=1.2, linestyle="-")
+    ax.plot(range(len(skews)), skews, color="olive", lw=1)
     return plt.savefig(image)
 
 
 # This returns a dict filtered by length, a dataframe filtered and sorted by the arguments given
-def filt(data="", leng="", quality="", id= '', column=""):
+def filt(data="", leng="", quality="", id="", column=""):
     try:
         if leng != "" and not isinstance(leng, int):
             raise ValueError("Leng must be int only")
@@ -74,7 +74,8 @@ def filt(data="", leng="", quality="", id= '', column=""):
     if leng:
         LENG = {}
         for i, s in data[[id, column]].values:
-            if len(s) >= leng: LENG.update({i: s})
+            if len(s) >= leng:
+                LENG.update({i: s})
         return LENG
     if quality:
         filtered = []
