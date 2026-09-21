@@ -22,7 +22,7 @@ def main(file):
 # Open file function (fasta)
 def open_file(file):
     # Open fasta files
-    if file.endswith((".fasta", ".fna")):
+    if file.endswith((".fasta", ".fna", ".faa")):
         data = {}
         with open(file) as f:
             for i in f:
@@ -92,7 +92,7 @@ def filt(data="", leng="", quality="", id= '', column=""):
                 not_filtered.append(qacc)
         DF_FALSE = data[data["qacc"].isin(not_filtered)]
         DF_TRUE = data[data["qacc"].isin(filtered)]
-        return [DF_FALSE, DF_TRUE]
+        return DF_FALSE, DF_TRUE
 
 
 # Makes a orginal dataframe with the data given, can merge only 2 dataframes

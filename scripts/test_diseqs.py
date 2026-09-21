@@ -1,28 +1,70 @@
-from diseqs import main, open_file, make_graph, filt, df_maker, convert, Genome
+from diseqs import main, open_file, filt, convert, Genome
+import pytest
+import pandas
 
-#main tests: 1
-'''Debe regresar un type Genome'''
 
-#open_file tests: 4
-'''debe regresar un dict de un fasta
-debe regresar Unboun error si el fasta no tien >
-debe regresar un df de csv y tsv'''
+def test_main():
+    #Correct
+    assert main("sequence.fasta") == {'GS874858.1': 37.537}
 
-#make_graph tests: 2
-'''debe regresar un grafico para gc skew
-debe regresar un grafico para gcc'''
+    #Wrong file name
+    with pytest.raises(FileNotFoundError):
+        main("secuence.fasta")
 
-#filt tests: 3
-'''debe regresar una tabla con leng
-debe regresar una tabla con calidad pasada
-debe regresar una tabla con calidad no pasada'''
+    #Correct class name
+    assert type(main("sequence.fasta")) == dict
 
-#df_maker tests:2
-'''debe regresar un df og
-debe regresar un merge'''
 
-#convert tests: 1
-'''debe convertir a genome'''
+def test_open_file():
+    #Correct fasta open
+    assert open_file("sequence.fasta") == {'GS874858.1': 'TAGTGTAACTGGGTTGACGTTCCATGTAGCAAATACGTCTCTAGCTTTAATTACCTTATTGTAATCATTGACAGTTCCTTTTGGAAGATTTATAGTTACTCTTCCAGAAGAGGTATTAATAGCGTATGATTTTCCCCATTCGGCTTTTAGTGTTTGACCAGATGAAGCATCATAAGTTTTCCAGGCACCGGCTGAATATGGAACATCTCCATCACCAAGCTCGTAATAAAGCTCATCAAAGTTTTCATTTATTTTTATACCACCTTTACGCAGGTAGTCACCGGTACCATCATCAACAACATTACCGATATTAATATTTTGTTTCATTATTGAGCCACCCC'}
 
-#Genome tests: 6
-'''debe contar bases, n, tamaño, convertir a rna inverso y el gc content con 3 decimales'''
+    #Wrong fasta file written
+    with pytest.raises(SystemExit):
+        open_file("wrong_written.fasta")
+
+    #Correct csv open
+    assert type(open_file("sequence.csv")) == pandas.DataFrame
+
+    #Correct tsv open
+    assert type(open_file("genome.tsv")) == pandas.DataFrame
+
+
+def test_filt():
+    #Correct leng filter
+    seq = open_file("sequence.csv")
+    assert filt(data = seq, leng=3, id="qacc", column="sacc") == {'Query_5958997': 'PP987310.1'}
+
+    #Correct quality filter
+    assert type(filt(data = seq, quality=True)[1]) == pandas.DataFrame
+
+    #Correct quality filter
+    assert type(filt(data = seq, quality=True)[0]) == pandas.DataFrame
+
+    #Correct filter working
+    with pytest.raises(SystemExit):
+        filt(data = seq, leng="hola")
+
+    with pytest.raises(SystemExit):
+        filt(data = seq, quality="hola")
+
+    with pytest.raises(SystemExit):
+        filt(data = seq, leng=3, id=3, column="sacc")
+
+
+def test_convert():
+    seq = open_file("sequence.fasta")
+    #converts makes genome class
+    assert type(convert(seq)) == Genome
+
+    #Count nb
+    assert convert(seq).nb_count == {'GS874858.1': [{'A': 95}, {'T': 118}, {'C': 73}, {'G': 55}]}
+
+    #Length
+    assert convert(seq).length == {'GS874858.1': 341}
+
+    #Correct GC count with 3 decimals
+    assert convert(seq).GC_content(an="%", rd=3) == {'GS874858.1': 37.537}
+
+    #Correct RNA reverse convert
+    assert convert(seq).RNA(reverse=True) == {'GS874858.1': 'UAGUGUAACUGGGUUGACGUUCCAUGUAGCAAAUACGUCUCUAGCUUUAAUUACCUUAUUGUAAUCAUUGACAGUUCCUUUUGGAAGAUUUAUAGUUACUCUUCCAGAAGAGGUAUUAAUAGCGUAUGAUUUUCCCCAUUCGGCUUUUAGUGUUUGACCAGAUGAAGCAUCAUAAGUUUUCCAGGCACCGGCUGAAUAUGGAACAUCUCCAUCACCAAGCUCGUAAUAAAGCUCAUCAAAGUUUUCAUUUAUUUUUAUACCACCUUUACGCAGGUAGUCACCGGUACCAUCAUCAACAACAUUACCGAUAUUAAUAUUUUGUUUCAUUAUUGAGCCACCCC'}
