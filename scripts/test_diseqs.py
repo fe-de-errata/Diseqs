@@ -5,36 +5,36 @@ import pandas
 
 def test_main():
     # Correct
-    assert main("sequence.fasta") == {"GS874858.1": 37.537}
+    assert main("test_files/sequence.fasta") == {"GS874858.1": 37.537}
 
     # Wrong file name
     with pytest.raises(FileNotFoundError):
-        main("secuence.fasta")
+        main("test_files/sequencesecuence.fasta")
 
     # Correct class name
-    assert type(main("sequence.fasta")) == dict
+    assert type(main("test_files/sequencesequence.fasta")) == dict
 
 
 def test_open_file():
     # Correct fasta open
-    assert open_file("sequence.fasta") == {
+    assert open_file("test_files/sequencesequence.fasta") == {
         "GS874858.1": "TAGTGTAACTGGGTTGACGTTCCATGTAGCAAATACGTCTCTAGCTTTAATTACCTTATTGTAATCATTGACAGTTCCTTTTGGAAGATTTATAGTTACTCTTCCAGAAGAGGTATTAATAGCGTATGATTTTCCCCATTCGGCTTTTAGTGTTTGACCAGATGAAGCATCATAAGTTTTCCAGGCACCGGCTGAATATGGAACATCTCCATCACCAAGCTCGTAATAAAGCTCATCAAAGTTTTCATTTATTTTTATACCACCTTTACGCAGGTAGTCACCGGTACCATCATCAACAACATTACCGATATTAATATTTTGTTTCATTATTGAGCCACCCC"
     }
 
     # Wrong fasta file written
     with pytest.raises(SystemExit):
-        open_file("wrong_written.fasta")
+        open_file("test_files/sequencewrong_written.fasta")
 
     # Correct csv open
-    assert type(open_file("sequence.csv")) == pandas.DataFrame
+    assert type(open_file("test_files/sequencesequence.csv")) == pandas.DataFrame
 
     # Correct tsv open
-    assert type(open_file("genome.tsv")) == pandas.DataFrame
+    assert type(open_file("test_files/sequencegenome.tsv")) == pandas.DataFrame
 
 
 def test_filt():
     # Correct leng filter
-    seq = open_file("sequence.csv")
+    seq = open_file("test_files/sequencesequence.csv")
     assert filt(data=seq, leng=3, id="qacc", column="sacc") == {
         "Query_5958997": "PP987310.1"
     }
@@ -57,7 +57,7 @@ def test_filt():
 
 
 def test_convert():
-    seq = open_file("sequence.fasta")
+    seq = open_file("test_files/sequencesequence.fasta")
     # converts makes genome class
     assert type(convert(seq)) == Genome
 
